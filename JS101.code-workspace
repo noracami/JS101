@@ -5,6 +5,7 @@
     }
   ],
   "settings": {
+    "window.zoomLevel": 1,
     "workbench.colorCustomizations": {
       "activityBar.activeBackground": "#fbed80",
       "activityBar.background": "#fbed80",
