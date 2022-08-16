@@ -14,15 +14,20 @@ const memory = {
 }
 
 const setMemory = ({ before, operator, after, display, state }) => {
-  if (before ?? null) memory.before = before
-  if (operator ?? null) memory.operator = operator
-  if (after ?? null) memory.after = after
-  if (display ?? null) memory.display = display
-  if (state ?? null) memory.state = state
+  if (before !== undefined) memory.before = before
+  if (operator !== undefined) memory.operator = operator
+  if (after !== undefined) memory.after = after
+  if (display !== undefined) memory.display = display
+  if (state !== undefined) memory.state = state
 }
 
 const getMemory = () => {
   return memory
+}
+
+const allClear = () => {
+  setMemory({ before: "0", operator: "", after: "0", display: "0", state: 0 })
+  updateDisplay()
 }
 
 const updateDisplay = () => {
@@ -39,35 +44,54 @@ const numeric = (n) => {
     // start
     case 0:
       if (n !== "0") {
-        setMemory({ before: n, display: n, state: 1 })
+        setMemory({ display: n, state: 1 })
         updateDisplay()
       }
       break
 
     // display has value, no operator
-    case 1:
+    case 1: {
       if (memory.display.length < 10) {
-        const { before, display } = getMemory()
-        setMemory({ before: before + n, display: display + n })
+        const { display } = getMemory()
+        setMemory({ display: display + n })
         updateDisplay()
       }
       break
+    }
 
     // display has value, first input after operator
-    case 2:
-      const {} = getMemory()
-      setMemory({ after: n, display: n, state: 3 })
+    // keep num in before
+    case 2: {
+      setMemory({ display: n, state: 3 })
       updateDisplay()
       break
+    }
 
     // display has value, has operator
-    case 3:
+    case 3: {
       if (memory.display.length < 10) {
-        const { after, display } = getMemory()
-        setMemory({ after: after + n, display: display + n })
+        const { display } = getMemory()
+        setMemory({ display: display + n })
         updateDisplay()
       }
       break
+    }
+
+    // after calculate result, press num > flush the display
+    // keep last operator in memory
+    case 4: {
+      setMemory({ display: n, state: 5 })
+      break
+    }
+
+    // keep last operator in memory
+    case 5: {
+      if (memory.display.length < 10) {
+        const { display } = getMemory()
+        setMemory({ display: display + n })
+      }
+      break
+    }
 
     default:
       break
@@ -78,8 +102,8 @@ const plus = (operator) => {
   switch (memory.state) {
     case 0:
     case 1: {
-      const { before } = getMemory()
-      setMemory({ operator, after: before, state: 2 })
+      const { display } = getMemory()
+      setMemory({ operator, before: display, state: 2 })
       break
     }
 
@@ -89,8 +113,50 @@ const plus = (operator) => {
 
     case 3: {
       // calculate answer
+      const { before, display } = getMemory()
+      const result = new Decimal(display).plus(before)
+      setMemory({ before: result, display: result, state: 2 })
+      updateDisplay()
+      break
+    }
+
+    case 4: {
+      // after calculate result, press + >
+      // keep current num in memory
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
+      break
+    }
+
+    case 5: {
+      ///
+      // calculate answer
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
+      break
+    }
+
+    default:
+      break
+  }
+}
+const minus = (operator) => {
+  switch (memory.state) {
+    case 0:
+    case 1: {
+      const { before } = getMemory()
+      setMemory({ operator, after: before, state: 2 })
+      break
+    }
+
+    case 2: {
+      setMemory({ operator })
+      break
+    }
+
+    case 3: {
       const { before, after } = getMemory()
-      const result = new Decimal(before).plus(after)
+      const result = new Decimal(before).minus(after)
       setMemory({ before: result, display: result, state: 2 })
       updateDisplay()
       break
@@ -99,9 +165,6 @@ const plus = (operator) => {
     default:
       break
   }
-}
-const minus = () => {
-  console.log("minus()")
 }
 const multiply = (num) => {
   console.log(`multiply(${num ?? ""})`)
@@ -114,11 +177,20 @@ const changeSign = () => {
 }
 // TODO
 const calculate = () => {
-  const { before, after, operator } = getMemory()
+  const { display, before, operator, state } = getMemory()
   switch (operator) {
     case "+": {
-      const result = new Decimal(before).plus(after)
-      setMemory({ before: result, display: result, state: 2 })
+      const result = new Decimal(display).plus(before)
+      if (state === 3) {
+        setMemory({ before: display })
+      }
+      setMemory({ display: result, state: 4 })
+      updateDisplay()
+      break
+    }
+    case "–": {
+      const result = new Decimal(display).minus(after)
+      setMemory({ before: result, display: result, state: 4 })
       updateDisplay()
       break
     }
@@ -127,25 +199,15 @@ const calculate = () => {
       break
   }
 }
-const allClear = () => {
-  setMemory({
-    before: "0",
-    operator: "",
-    after: "0",
-    display: "0",
-    state: 0,
-  })
-  updateDisplay()
-}
 
 document.addEventListener("DOMContentLoaded", () => {
   const calc = document.querySelector(".calc")
-  console.log(calc)
   calc.addEventListener("mousedown", (e) => {
+    const VALUE = e.target.textContent
     if (e.target.className === "display") {
       console.log("It's Display!!")
     } else {
-      switch (e.target.textContent) {
+      switch (VALUE) {
         case "0":
         case "1":
         case "2":
@@ -156,14 +218,14 @@ document.addEventListener("DOMContentLoaded", () => {
         case "7":
         case "8":
         case "9":
-          numeric(e.target.textContent)
+          numeric(VALUE)
           break
 
         case "+":
-          plus(e.target.textContent)
+          plus(VALUE)
           break
         case "–":
-          minus()
+          minus(VALUE)
           break
         case "×":
           multiply()
@@ -184,6 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
           break
         case "AC":
           allClear()
+          console.log("AC")
           break
         case "=":
           calculate()
@@ -195,16 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
           break
       }
     }
-    // if (e.target.className.includes("number-key")) {
-    //   if (e.target.textContent === ".") {
-    //     addDecimalPoint()
-    //   } else {
-    //     console.log(e.target.textContent)
-    //   }
-    // } else {
-    //   console.log(e.target.className)
-    //   console.log(e.target.textContent)
-    // }
-    // console.log(e.target.textContent)
+    console.log(getMemory())
   })
+  console.log(getMemory())
 })
