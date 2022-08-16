@@ -114,7 +114,7 @@ const plus = (operator) => {
     case 3: {
       // calculate answer
       const { before, display } = getMemory()
-      const result = new Decimal(display).plus(before)
+      const result = new Decimal(before).plus(display)
       setMemory({ before: result, display: result, state: 2 })
       updateDisplay()
       break
@@ -144,8 +144,8 @@ const minus = (operator) => {
   switch (memory.state) {
     case 0:
     case 1: {
-      const { before } = getMemory()
-      setMemory({ operator, after: before, state: 2 })
+      const { display } = getMemory()
+      setMemory({ operator, before: display, state: 2 })
       break
     }
 
@@ -155,10 +155,22 @@ const minus = (operator) => {
     }
 
     case 3: {
-      const { before, after } = getMemory()
-      const result = new Decimal(before).minus(after)
+      const { before, display } = getMemory()
+      const result = new Decimal(before).minus(display)
       setMemory({ before: result, display: result, state: 2 })
       updateDisplay()
+      break
+    }
+
+    case 4: {
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
+      break
+    }
+
+    case 5: {
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
       break
     }
 
@@ -166,7 +178,31 @@ const minus = (operator) => {
       break
   }
 }
-const multiply = (num) => {
+// TODO
+const multiply = (operator) => {
+  switch (operator) {
+    case 0: {
+      break
+    }
+    case 1: {
+      break
+    }
+    case 2: {
+      break
+    }
+    case 3: {
+      break
+    }
+    case 4: {
+      break
+    }
+    case 5: {
+      break
+    }
+    default:
+      break
+  }
+
   console.log(`multiply(${num ?? ""})`)
 }
 const divide = () => {
@@ -175,23 +211,42 @@ const divide = () => {
 const changeSign = () => {
   console.log("changeSign")
 }
-// TODO
+const percentage = () => {
+  console.log("turn into %")
+}
 const calculate = () => {
   const { display, before, operator, state } = getMemory()
   switch (operator) {
     case "+": {
-      const result = new Decimal(display).plus(before)
+      setMemory({
+        display: new Decimal(before).plus(display),
+        state: 4,
+      })
       if (state === 3) {
         setMemory({ before: display })
       }
-      setMemory({ display: result, state: 4 })
       updateDisplay()
       break
     }
     case "–": {
-      const result = new Decimal(display).minus(after)
-      setMemory({ before: result, display: result, state: 4 })
+      setMemory({
+        display: new Decimal(display).minus(before),
+        state: 4,
+      })
+      if (state === 2) {
+        setMemory({ display: "0", before: display })
+      }
+      if (state === 3) {
+        setMemory({
+          display: new Decimal(before).minus(display),
+          before: display,
+        })
+      }
       updateDisplay()
+      break
+    }
+    // TODO
+    case "×": {
       break
     }
 
@@ -242,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
           changeSign()
           break
         case "%":
-          multiply(100)
+          percentage()
           break
         case "AC":
           allClear()
