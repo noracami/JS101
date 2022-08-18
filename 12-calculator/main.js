@@ -113,10 +113,9 @@ const plus = (operator) => {
 
     case 3: {
       // calculate answer
-      const { before, display } = getMemory()
-      const result = new Decimal(before).plus(display)
-      setMemory({ before: result, display: result, state: 2 })
-      updateDisplay()
+      calculate()
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
       break
     }
 
@@ -129,8 +128,6 @@ const plus = (operator) => {
     }
 
     case 5: {
-      ///
-      // calculate answer
       const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
@@ -155,10 +152,10 @@ const minus = (operator) => {
     }
 
     case 3: {
-      const { before, display } = getMemory()
-      const result = new Decimal(before).minus(display)
-      setMemory({ before: result, display: result, state: 2 })
-      updateDisplay()
+      // calculate answer
+      calculate()
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
       break
     }
 
@@ -194,10 +191,12 @@ const multiply = (operator) => {
     }
 
     case 3: {
-      const { before, display } = getMemory()
-      const result = new Decimal(before).mul(display)
-      setMemory({ before: result, display: result, state: 2 })
-      updateDisplay()
+      // calculate answer
+      calculate()
+      const { display } = getMemory()
+      // const result = new Decimal(before).mul(display)
+      setMemory({ before: display, operator, state: 2 })
+      // updateDisplay()
       break
     }
 
@@ -220,6 +219,32 @@ const multiply = (operator) => {
   }
 }
 const divide = () => {
+  // TODO
+  switch (memory.state) {
+    case 0:
+    case 1: {
+      break
+    }
+
+    case 2: {
+      break
+    }
+
+    case 3: {
+      break
+    }
+
+    case 4: {
+      break
+    }
+
+    case 5: {
+      break
+    }
+
+    default:
+      break
+  }
   console.log("divide()")
 }
 const changeSign = () => {
@@ -274,7 +299,21 @@ const calculate = () => {
     }
     // TODO
     case "÷": {
-      break
+      // setMemory({
+      //   display: new Decimal(display).minus(before),
+      //   state: 4,
+      // })
+      // if (state === 2) {
+      //   setMemory({ display: "0", before: display })
+      // }
+      // if (state === 3) {
+      //   setMemory({
+      //     display: new Decimal(before).minus(display),
+      //     before: display,
+      //   })
+      // }
+      // updateDisplay()
+      // break
     }
 
     default:
@@ -313,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
           multiply(VALUE)
           break
         case "÷":
-          divide()
+          divide(VALUE)
           break
 
         case ".":
@@ -336,7 +375,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         default:
           console.log(e.target.className)
-
           break
       }
     }
