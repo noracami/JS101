@@ -1,6 +1,4 @@
 import "./style.css"
-import javascriptLogo from "./javascript.svg"
-import { setupCounter } from "./counter.js"
 
 // 程式碼寫這裡
 import Decimal from "decimal.js"
@@ -10,14 +8,23 @@ const memory = {
   operator: "",
   after: "0",
   display: "0",
+  decimalPoint: false,
   state: 0,
 }
 
-const setMemory = ({ before, operator, after, display, state }) => {
+const setMemory = ({
+  before,
+  operator,
+  after,
+  display,
+  decimalPoint,
+  state,
+}) => {
   if (before !== undefined) memory.before = before
   if (operator !== undefined) memory.operator = operator
   if (after !== undefined) memory.after = after
   if (display !== undefined) memory.display = display
+  if (decimalPoint !== undefined) memory.decimalPoint = decimalPoint
   if (state !== undefined) memory.state = state
 }
 
@@ -32,15 +39,70 @@ const allClear = () => {
 
 const updateDisplay = () => {
   const domDisplay = document.querySelector(".display")
-  // TODO round the display
+  // TODO fixed the display length
   domDisplay.textContent = memory.display
 }
 
 const addDecimalPoint = () => {
-  console.log(".")
+  const { display, state, decimalPoint } = getMemory()
+  if (!decimalPoint) {
+    switch (state) {
+      case 0: {
+        setMemory({
+          display: "0.",
+          decimalPoint: true,
+          state: 1,
+        })
+        break
+      }
+      case 1: {
+        setMemory({
+          display: `${display}.`,
+          decimalPoint: true,
+        })
+        break
+      }
+      case 2: {
+        setMemory({
+          display: "0.",
+          decimalPoint: true,
+          state: 3,
+        })
+        break
+      }
+      case 3: {
+        setMemory({
+          display: `${display}.`,
+          decimalPoint: true,
+        })
+        break
+      }
+      case 4: {
+        setMemory({
+          display: "0.",
+          decimalPoint: true,
+          state: 5,
+        })
+        break
+      }
+      case 5: {
+        setMemory({
+          display: `${display}.`,
+          decimalPoint: true,
+        })
+        break
+      }
+
+      default:
+        break
+    }
+    updateDisplay()
+  }
 }
+
 const numeric = (n) => {
-  switch (memory.state) {
+  const { display, state, decimalPoint } = getMemory()
+  switch (state) {
     // start
     case 0:
       if (n !== "0") {
@@ -50,8 +112,7 @@ const numeric = (n) => {
 
     // display has value, no operator
     case 1: {
-      if (memory.display.length < 10) {
-        const { display } = getMemory()
+      if (display.length < 10 || (decimalPoint && display.length < 12)) {
         setMemory({ display: display + n })
       }
       break
@@ -66,8 +127,7 @@ const numeric = (n) => {
 
     // display has value, has operator
     case 3: {
-      if (memory.display.length < 10) {
-        const { display } = getMemory()
+      if (display.length < 10 || (decimalPoint && display.length < 12)) {
         setMemory({ display: display + n })
       }
       break
@@ -82,14 +142,14 @@ const numeric = (n) => {
 
     // keep last operator in memory
     case 5: {
-      if (memory.display.length < 10) {
-        const { display } = getMemory()
+      if (display.length < 10 || (decimalPoint && display.length < 12)) {
         setMemory({ display: display + n })
       }
       break
     }
 
     case 6: {
+      allClear()
       setMemory({
         display: n,
         state: n === "0" ? 0 : 1,
@@ -104,11 +164,18 @@ const numeric = (n) => {
 }
 
 const plus = (operator) => {
-  switch (memory.state) {
+  const { display, decimalPoint, state } = getMemory()
+  switch (state) {
     case 0:
     case 1: {
-      const { display } = getMemory()
-      setMemory({ operator, before: display, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
@@ -119,7 +186,6 @@ const plus = (operator) => {
     case 3: {
       // calculate answer
       calculate()
-      const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
     }
@@ -127,13 +193,18 @@ const plus = (operator) => {
     case 4: {
       // after calculate result, press + >
       // keep current num in memory
-      const { display } = getMemory()
-      setMemory({ before: display, operator, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
     case 5: {
-      const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
     }
@@ -142,12 +213,20 @@ const plus = (operator) => {
       break
   }
 }
+
 const minus = (operator) => {
-  switch (memory.state) {
+  const { display, decimalPoint, state } = getMemory()
+  switch (state) {
     case 0:
     case 1: {
-      const { display } = getMemory()
-      setMemory({ operator, before: display, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
@@ -157,21 +236,24 @@ const minus = (operator) => {
     }
 
     case 3: {
-      // calculate answer
       calculate()
-      const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
     }
 
     case 4: {
-      const { display } = getMemory()
-      setMemory({ before: display, operator, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
     case 5: {
-      const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
     }
@@ -180,13 +262,21 @@ const minus = (operator) => {
       break
   }
 }
+
 // TODO operator precedence
 const multiply = (operator) => {
-  switch (memory.state) {
+  const { display, decimalPoint, state } = getMemory()
+  switch (state) {
     case 0:
     case 1: {
-      const { display } = getMemory()
-      setMemory({ operator, before: display, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
@@ -196,25 +286,24 @@ const multiply = (operator) => {
     }
 
     case 3: {
-      // calculate answer
       calculate()
-      const { display } = getMemory()
-      // const result = new Decimal(before).mul(display)
       setMemory({ before: display, operator, state: 2 })
-      // updateDisplay()
       break
     }
 
     case 4: {
-      // after calculate result, press x >
-      // keep current num in memory
-      const { display } = getMemory()
-      setMemory({ before: display, operator, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
     case 5: {
-      const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
     }
@@ -223,12 +312,20 @@ const multiply = (operator) => {
       break
   }
 }
+
 const divide = (operator) => {
-  switch (memory.state) {
+  const { display, decimalPoint, state } = getMemory()
+  switch (state) {
     case 0:
     case 1: {
-      const { display } = getMemory()
-      setMemory({ operator, before: display, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
@@ -239,19 +336,23 @@ const divide = (operator) => {
 
     case 3: {
       calculate()
-      const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
     }
 
     case 4: {
-      const { display } = getMemory()
-      setMemory({ before: display, operator, state: 2 })
+      setMemory({
+        operator,
+        before: new Decimal(display),
+        state: 2,
+      })
+      if (decimalPoint) {
+        setMemory({ decimalPoint: false })
+      }
       break
     }
 
     case 5: {
-      const { display } = getMemory()
       setMemory({ before: display, operator, state: 2 })
       break
     }
@@ -259,16 +360,18 @@ const divide = (operator) => {
     default:
       break
   }
-  console.log("divide()")
 }
+
 const changeSign = () => {
   console.log("changeSign")
 }
+
 const percentage = () => {
   console.log("turn into %")
 }
+
 const calculate = () => {
-  const { display, before, operator, state } = getMemory()
+  const { display, before, operator, decimalPoint, state } = getMemory()
   switch (operator) {
     case "+": {
       setMemory({
@@ -276,8 +379,11 @@ const calculate = () => {
         state: 4,
       })
       if (state === 3) {
-        setMemory({ before: display })
+        decimalPoint
+          ? setMemory({ before: new Decimal(display) })
+          : setMemory({ before: display })
       }
+      decimalPoint && setMemory({ decimalPoint: false })
       updateDisplay()
       break
     }
@@ -287,15 +393,15 @@ const calculate = () => {
         display: new Decimal(display).minus(before),
         state: 4,
       })
-      if (state === 2) {
-        setMemory({ before: display })
+      if (state === 2 || state === 3) {
+        if (state === 3) {
+          setMemory({ display: new Decimal(before).minus(display) })
+        }
+        decimalPoint
+          ? setMemory({ before: new Decimal(display) })
+          : setMemory({ before: display })
       }
-      if (state === 3) {
-        setMemory({
-          display: new Decimal(before).minus(display),
-          before: display,
-        })
-      }
+      decimalPoint && setMemory({ decimalPoint: false })
       updateDisplay()
       break
     }
@@ -306,8 +412,11 @@ const calculate = () => {
         state: 4,
       })
       if (state === 3) {
-        setMemory({ before: display })
+        decimalPoint
+          ? setMemory({ before: new Decimal(display) })
+          : setMemory({ before: display })
       }
+      decimalPoint && setMemory({ decimalPoint: false })
       updateDisplay()
       break
     }
@@ -326,12 +435,13 @@ const calculate = () => {
         })
         if (state === 2 || state === 3) {
           if (state === 3) {
-            setMemory({
-              display: new Decimal(before).div(display),
-            })
+            setMemory({ display: new Decimal(before).div(display) })
           }
-          setMemory({ before: display })
+          decimalPoint
+            ? setMemory({ before: new Decimal(display) })
+            : setMemory({ before: display })
         }
+        decimalPoint && setMemory({ decimalPoint: false })
         updateDisplay()
         break
       }
