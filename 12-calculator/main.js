@@ -5,26 +5,17 @@ import Decimal from "decimal.js"
 
 const memory = {
   before: "0",
-  operator: "",
-  after: "0",
-  display: "0",
   decimalPoint: false,
+  display: "0",
+  operator: "",
   state: 0,
 }
 
-const setMemory = ({
-  before,
-  operator,
-  after,
-  display,
-  decimalPoint,
-  state,
-}) => {
+const setMemory = ({ before, decimalPoint, display, operator, state }) => {
   if (before !== undefined) memory.before = before
-  if (operator !== undefined) memory.operator = operator
-  if (after !== undefined) memory.after = after
-  if (display !== undefined) memory.display = display
   if (decimalPoint !== undefined) memory.decimalPoint = decimalPoint
+  if (display !== undefined) memory.display = display
+  if (operator !== undefined) memory.operator = operator
   if (state !== undefined) memory.state = state
 }
 
@@ -45,7 +36,7 @@ const updateDisplay = () => {
 
 const addDecimalPoint = () => {
   const { display, state, decimalPoint } = getMemory()
-  if (!decimalPoint) {
+  if (!decimalPoint && new Decimal(display).isInteger()) {
     switch (state) {
       case 0: {
         setMemory({
@@ -363,7 +354,56 @@ const divide = (operator) => {
 }
 
 const changeSign = () => {
-  console.log("changeSign")
+  const { display, decimalPoint, state } = getMemory()
+  switch (state) {
+    case 0: {
+      setMemory({
+        display: new Decimal(display).negated(),
+      })
+      break
+    }
+
+    case 1: {
+      setMemory({
+        display: new Decimal(display).negated(),
+        state: 0,
+      })
+      decimalPoint && setMemory({ decimalPoint: false })
+      break
+    }
+
+    case 2: {
+      setMemory({
+        display: new Decimal(display).negated(),
+      })
+      break
+    }
+
+    case 3: {
+      setMemory({
+        display: new Decimal(display).negated(),
+      })
+      decimalPoint && setMemory({ decimalPoint: false })
+      break
+    }
+    case 4: {
+      setMemory({
+        display: new Decimal(display).negated(),
+      })
+      break
+    }
+    case 5: {
+      setMemory({
+        display: new Decimal(display).negated(),
+      })
+      decimalPoint && setMemory({ decimalPoint: false })
+      break
+    }
+
+    default:
+      break
+  }
+  updateDisplay()
 }
 
 const percentage = () => {
