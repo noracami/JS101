@@ -386,12 +386,14 @@ const changeSign = () => {
       decimalPoint && setMemory({ decimalPoint: false })
       break
     }
+
     case 4: {
       setMemory({
         display: new Decimal(display).negated(),
       })
       break
     }
+
     case 5: {
       setMemory({
         display: new Decimal(display).negated(),
@@ -406,8 +408,61 @@ const changeSign = () => {
   updateDisplay()
 }
 
+// FIXME result is weird in real calculator e.g. input is ['2', '+', '%']
+//       expect is 0.02, but it shows 0.04
 const percentage = () => {
-  console.log("turn into %")
+  const { display, decimalPoint, state } = getMemory()
+  switch (state) {
+    case 0: {
+      setMemory({
+        display: new Decimal(display).div(100),
+      })
+      break
+    }
+
+    case 1: {
+      setMemory({
+        display: new Decimal(display).div(100),
+        state: 0,
+      })
+      decimalPoint && setMemory({ decimalPoint: false })
+      break
+    }
+
+    case 2: {
+      setMemory({
+        display: new Decimal(display).div(100),
+      })
+      break
+    }
+
+    case 3: {
+      setMemory({
+        display: new Decimal(display).div(100),
+      })
+      decimalPoint && setMemory({ decimalPoint: false })
+      break
+    }
+
+    case 4: {
+      setMemory({
+        display: new Decimal(display).div(100),
+      })
+      break
+    }
+
+    case 5: {
+      setMemory({
+        display: new Decimal(display).div(100),
+      })
+      decimalPoint && setMemory({ decimalPoint: false })
+      break
+    }
+
+    default:
+      break
+  }
+  updateDisplay()
 }
 
 const calculate = () => {
