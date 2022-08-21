@@ -32,8 +32,8 @@ const allClear = () => {
 
 const updateDisplay = () => {
   const domDisplay = document.querySelector(".display")
-
-  domDisplay.textContent = new Decimal(memory.display)
+  // TODO round the display
+  domDisplay.textContent = memory.display
 }
 
 const addDecimalPoint = () => {
@@ -45,7 +45,6 @@ const numeric = (n) => {
     case 0:
       if (n !== "0") {
         setMemory({ display: n, state: 1 })
-        updateDisplay()
       }
       break
 
@@ -54,7 +53,6 @@ const numeric = (n) => {
       if (memory.display.length < 10) {
         const { display } = getMemory()
         setMemory({ display: display + n })
-        updateDisplay()
       }
       break
     }
@@ -63,7 +61,6 @@ const numeric = (n) => {
     // keep num in before
     case 2: {
       setMemory({ display: n, state: 3 })
-      updateDisplay()
       break
     }
 
@@ -72,7 +69,6 @@ const numeric = (n) => {
       if (memory.display.length < 10) {
         const { display } = getMemory()
         setMemory({ display: display + n })
-        updateDisplay()
       }
       break
     }
@@ -93,9 +89,18 @@ const numeric = (n) => {
       break
     }
 
+    case 6: {
+      setMemory({
+        display: n,
+        state: n === "0" ? 0 : 1,
+      })
+      break
+    }
+
     default:
       break
   }
+  updateDisplay()
 }
 
 const plus = (operator) => {
@@ -218,27 +223,36 @@ const multiply = (operator) => {
       break
   }
 }
-const divide = () => {
-  // TODO
+const divide = (operator) => {
   switch (memory.state) {
     case 0:
     case 1: {
+      const { display } = getMemory()
+      setMemory({ operator, before: display, state: 2 })
       break
     }
 
     case 2: {
+      setMemory({ operator })
       break
     }
 
     case 3: {
+      calculate()
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
       break
     }
 
     case 4: {
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
       break
     }
 
     case 5: {
+      const { display } = getMemory()
+      setMemory({ before: display, operator, state: 2 })
       break
     }
 
@@ -274,7 +288,7 @@ const calculate = () => {
         state: 4,
       })
       if (state === 2) {
-        setMemory({ display: "0", before: display })
+        setMemory({ before: display })
       }
       if (state === 3) {
         setMemory({
@@ -297,23 +311,30 @@ const calculate = () => {
       updateDisplay()
       break
     }
-    // TODO
+
     case "÷": {
-      // setMemory({
-      //   display: new Decimal(display).minus(before),
-      //   state: 4,
-      // })
-      // if (state === 2) {
-      //   setMemory({ display: "0", before: display })
-      // }
-      // if (state === 3) {
-      //   setMemory({
-      //     display: new Decimal(before).minus(display),
-      //     before: display,
-      //   })
-      // }
-      // updateDisplay()
-      // break
+      if (display === "0") {
+        setMemory({
+          display: "不是數字",
+          state: 6,
+        })
+        updateDisplay()
+      } else {
+        setMemory({
+          display: new Decimal(display).div(before),
+          state: 4,
+        })
+        if (state === 2 || state === 3) {
+          if (state === 3) {
+            setMemory({
+              display: new Decimal(before).div(display),
+            })
+          }
+          setMemory({ before: display })
+        }
+        updateDisplay()
+        break
+      }
     }
 
     default:
